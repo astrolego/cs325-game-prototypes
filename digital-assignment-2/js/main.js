@@ -5,17 +5,27 @@ function preload() {
     game.load.image('sky', 'assets/sky.png');
     game.load.image('ground', 'assets/platform.png');
     game.load.image('star', 'assets/star.png');
-    game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+    game.load.spritesheet('dude', 'assets/sedona.png', 32, 48);
+    game.load.spritesheet('dude2', 'assets/sedona2.png', 32, 48);
 
 }
 
 var player;
+var player2;
 var platforms;
 var cursors;
 
 var stars;
 var score = 0;
 var scoreText;
+
+var bullets;
+
+var pauseKey;
+var upKey;
+var downKey;
+var leftKey;
+var rightKey;
 
 function create() {
 
@@ -41,27 +51,36 @@ function create() {
     ground.body.immovable = true;
 
     //  Now let's create two ledges
-    var ledge = platforms.create(400, 400, 'ground');
-    ledge.body.immovable = true;
-
-    ledge = platforms.create(-150, 250, 'ground');
-    ledge.body.immovable = true;
+//    var ledge = platforms.create(400, 400, 'ground');
+//    ledge.body.immovable = true;
+//
+//    ledge = platforms.create(-150, 250, 'ground');
+//    ledge.body.immovable = true;
 
     // The player and its settings
     player = game.add.sprite(32, game.world.height - 150, 'dude');
+	player2 = game.add.sprite(132, game.world.heigh - 150, 'dude2');
 
     //  We need to enable physics on the player
     game.physics.arcade.enable(player);
+    game.physics.arcade.enable(player2);
 
     //  Player physics properties. Give the little guy a slight bounce.
     player.body.bounce.y = 0.2;
-    player.body.gravity.y = 300;
+    player.body.gravity.y = 800;
     player.body.collideWorldBounds = true;
 
+    player2.body.bounce.y = 0.2;
+    player2.body.gravity.y = 800;
+    player2.body.collideWorldBounds = true;
+	
     //  Our two animations, walking left and right.
     player.animations.add('left', [0, 1, 2, 3], 10, true);
     player.animations.add('right', [5, 6, 7, 8], 10, true);
-
+	
+    player2.animations.add('left', [0, 1, 2, 3], 10, true);
+    player2.animations.add('right', [5, 6, 7, 8], 10, true);
+	
     //  Finally some stars to collect
     stars = game.add.group();
 
@@ -86,20 +105,27 @@ function create() {
 
     //  Our controls.
     cursors = game.input.keyboard.createCursorKeys();
-    
+	
+	pauseKey = game.input.keyboard.addKey(Phaser.Keyboard.P)
+    upKey = game.input.keyboard.addKey(Phaser.Keyboard.W)
+	downKey = game.input.keyboard.addKey(Phaser.Keyboard.S)
+	leftKey = game.input.keyboard.addKey(Phaser.Keyboard.A)
+	rightKey = game.input.keyboard.addKey(Phaser.Keyboard.D)
+
 }
 
 function update() {
 
     //  Collide the player and the stars with the platforms
     var hitPlatform = game.physics.arcade.collide(player, platforms);
-    game.physics.arcade.collide(stars, platforms);
+    game.physics.arcade.collide(player2, platforms);
 
     //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
     game.physics.arcade.overlap(player, stars, collectStar, null, this);
 
     //  Reset the players velocity (movement)
     player.body.velocity.x = 0;
+    player2.body.velocity.x = 0;
 
     if (cursors.left.isDown)
     {
@@ -128,16 +154,57 @@ function update() {
     {
         player.body.velocity.y = -350;
     }
+	
 
+	
+    if (leftKey.isDown)
+    {
+        //  Move to the left
+        player2.body.velocity.x = -150;
+
+        player2.animations.play('left');
+    }
+    else if (rightKey.isDown)
+    {
+        //  Move to the right
+        player2.body.velocity.x = 150;
+
+        player2.animations.play('right');
+    }
+    else
+    {
+        //  Stand still
+        player2.animations.stop();
+
+        player2.frame = 4;
+    }
+    
+    //  Allow the player to jump if they are touching the ground.
+    if (upKey.isDown && player2.body.touching.down && hitPlatform)
+    {
+        player2.body.velocity.y = -350;
+    }
+	
 }
 
-function collectStar (player, star) {
+//function collectStar (player, star) {
+//    
+//    // Removes the star from the screen
+//    star.kill();
+//
+//    //  Add and update the score
+//    score += 10;
+//    scoreText.text = 'Score: ' + score;
+//
+//}
+
+function collectStar (player, player2) {
     
     // Removes the star from the screen
-    star.kill();
+    player.kill();
 
     //  Add and update the score
-    score += 10;
+    score += 1;
     scoreText.text = 'Score: ' + score;
 
 }
